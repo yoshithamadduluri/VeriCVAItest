@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "selenium-webdriver": "^4.19.0",
-    "chromedriver": "^123.0.1",
     "exceljs": "^4.4.0"
   }
 }
