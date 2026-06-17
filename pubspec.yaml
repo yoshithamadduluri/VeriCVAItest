@@ -1,0 +1,57 @@
+name: vericv_ai
+description: "VeriCV AI – AI-Powered Resume Analyzer with Skill Verification and Portfolio Authenticity Detection"
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI & Design
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+  font_awesome_flutter: ^10.7.0
+  fl_chart: ^0.65.0 # For interactive charts
+  lottie: ^3.0.0 # For animations
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  
+  # Firebase Services
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.5.6
+  firebase_messaging: ^14.7.15
+  firebase_analytics: ^10.7.4
+  google_sign_in: ^6.2.1
+  
+  # AI Integration
+  google_generative_ai: ^0.2.2 # For Gemini
+  
+  # Utilities
+  file_picker: ^8.0.0 # For PDF/DOCX uploads
+  syncfusion_flutter_pdf: ^24.1.41 # For PDF text extraction
+  http: ^1.6.0 # For GitHub API requests
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.5
+  intl: ^0.19.0
+  flutter_dotenv: ^6.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.3.9
+  riverpod_lint: ^2.3.9
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
