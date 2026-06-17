@@ -23,11 +23,21 @@ async function generateReport(results) {
   console.log('✅ Excel report generated: web_test_report.xlsx');
 }
 
+const chrome = require('selenium-webdriver/chrome');
+
 async function runSeleniumTests() {
   const results = [];
   
-  // Note: Ensure chromedriver is installed or available in PATH
-  let driver = await new Builder().forBrowser('chrome').build();
+  // Configure Chrome options for headless environment (CI)
+  let options = new chrome.Options();
+  options.addArguments('--headless=new');
+  options.addArguments('--no-sandbox');
+  options.addArguments('--disable-dev-shm-usage');
+
+  let driver = await new Builder()
+    .forBrowser('chrome')
+    .setChromeOptions(options)
+    .build();
 
   try {
     results.push({ step: 'Launch Browser', status: 'Passed', details: 'Chrome launched successfully.' });
