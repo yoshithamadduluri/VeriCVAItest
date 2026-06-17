@@ -1,0 +1,12 @@
+{
+  "name": "vericvai-appium-tests",
+  "version": "1.0.0",
+  "description": "Mobile test report generator for VeriCV AI Android app",
+  "main": "test.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}
