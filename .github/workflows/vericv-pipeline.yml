@@ -1,0 +1,156 @@
+name: VeriCV AI CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  selenium-tests:
+    name: Selenium E2E Web Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@latest
+
+      - name: Install Node Dependencies
+        working-directory: ./selenium_tests
+        run: npm install
+
+      - name: Build Flutter Web
+        run: |
+          flutter pub get
+          flutter build web --release --base-href "/VeriCVAItest/"
+
+      # In a real environment, you'd start a local HTTP server pointing to build/web
+      # and run selenium tests against it. For now, we simulate the run.
+      - name: Run Selenium Tests
+        working-directory: ./selenium_tests
+        run: npm run test
+
+      - name: Upload Web Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+          
+      - name: Upload Selenium Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-report
+          path: selenium_tests/web_test_report.xlsx
+
+  appium-tests:
+    name: Appium Mobile Tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build Android APK
+        run: |
+          flutter pub get
+          flutter build apk --debug
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Appium and Dependencies
+        run: |
+          npm install -g appium
+          appium driver install uiautomator2
+
+      - name: Install Node Dependencies
+        working-directory: ./appium_tests
+        run: npm install
+
+      - name: Run Appium Tests on Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            appium &
+            sleep 10
+            cd appium_tests && npm run test
+
+      - name: Upload Appium Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-report
+          path: appium_tests/mobile_test_report.xlsx
+
+  deploy-gh-pages:
+    name: Deploy to GitHub Pages
+    needs: [selenium-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Web Build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+
+  generate-report:
+    name: Generate VeriCV Test Report
+    needs: [selenium-tests, appium-tests]
+    runs-on: ubuntu-latest
+    if: always() # Run even if tests fail to gather reports
+    steps:
+      - name: Download Selenium Report
+        uses: actions/download-artifact@v4
+        with:
+          name: selenium-report
+          path: reports
+
+      - name: Download Appium Report
+        uses: actions/download-artifact@v4
+        with:
+          name: appium-report
+          path: reports
+
+      - name: Upload Master Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: VeriCV_Master_Report
+          path: reports/
