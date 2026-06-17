@@ -49,3 +49,8 @@ app.*.map.json
 android/app/google-services.json
 lib/firebase_options.dart
 
+
+# Node.js Testing
+node_modules/
+*.xlsx
+
