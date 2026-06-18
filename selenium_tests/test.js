@@ -230,6 +230,11 @@ async function runSeleniumTests() {
     await driver.get(appUrl);
     await driver.sleep(5000);
 
+    // Take screenshot as proof of E2E launch
+    const screenshot = await driver.takeScreenshot();
+    fs.writeFileSync('web_e2e_snapshot.png', screenshot, 'base64');
+    console.log('✅ Captured Web E2E launch snapshot: web_e2e_snapshot.png');
+
     const title = await driver.getTitle();
     console.log(`Page title: ${title}`);
 
