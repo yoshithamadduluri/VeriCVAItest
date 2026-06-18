@@ -1,13 +1,19 @@
 {
   "name": "vericvai-selenium-web-tests",
   "version": "1.0.0",
-  "description": "Selenium E2E tests for VeriCV AI web app with Excel reporting and screenshots",
-  "main": "runner.js",
+  "description": "Selenium E2E Web Testing Suite for VeriCV AI - 120 Test Cases with Excel Report Generation",
+  "main": "test.js",
   "scripts": {
-    "test": "node runner.js"
+    "test": "node test.js",
+    "test:headed": "node test.js --headed"
   },
   "dependencies": {
-    "selenium-webdriver": "^4.19.0",
-    "exceljs": "^4.4.0"
-  }
+    "exceljs": "^4.4.0",
+    "selenium-webdriver": "^4.18.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "VeriCV AI Testing Pipeline",
+  "license": "MIT"
 }

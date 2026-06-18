@@ -33,7 +33,7 @@ jobs:
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@latest
 
-      - name: Install Node Dependencies
+      - name: Install Selenium Node Dependencies
         working-directory: ./selenium-web-tests
         run: npm install
 
