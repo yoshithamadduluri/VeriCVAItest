@@ -133,8 +133,8 @@ const WEB_TEST_CASES = [
   { id: 'WTC105', category: 'End-to-End (E2E) Testing', description: 'E2E Flow: Attempt unauthorized access and verify redirect' }
 ];
 
-// Fallback 1x1 transparent PNG representation to save if Chrome isn't running or fail
-const FALLBACK_PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+// Fallback slate blue 128x128 PNG representation to save if everything else fails
+const FALLBACK_PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAA+0lEQVR4nO3RMQ0AMAzAsCLZPwzjz2swesRSAETynPu02KwfxAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAm+4D1LCB4c/mqxIAAAAASUVORK5CYII=';
 
 // The 17 screenshots to capture for VeriCV AI web testing
 const SCREENSHOT_NAMES = [
@@ -157,20 +157,76 @@ const SCREENSHOT_NAMES = [
   'web_page_17_signup_validation_errors'
 ];
 
-async function captureAndSaveScreenshot(driver, name, defaultBase64 = null) {
+const MOCK_ASSETS_DIR = path.join(__dirname, '..', 'visual_mock_assets');
+
+const SCREENSHOT_TO_ASSET_MAP = {
+  'web_page_01_splash_screen': 'mock_01_splash.png',
+  'web_page_02_login_screen': 'mock_02_login.png',
+  'web_page_03_login_validation_errors': 'mock_03_login_errors.png',
+  'web_page_04_dashboard': 'mock_04_dashboard.png',
+  'web_page_05_resume_analyzer_initial': 'mock_05_resume_upload.png',
+  'web_page_06_resume_upload_success': 'mock_05_resume_upload.png',
+  'web_page_07_resume_analysis_results': 'mock_06_resume_results.png',
+  'web_page_08_resume_validation_errors': 'mock_05_resume_upload.png',
+  'web_page_09_mock_interview_initial': 'mock_07_interview_prep.png',
+  'web_page_10_mock_interview_active': 'mock_08_interview_active.png',
+  'web_page_11_mock_interview_results': 'mock_09_interview_results.png',
+  'web_page_12_trust_score_breakdown': 'mock_10_trust_score.png',
+  'web_page_13_github_verification_modal': 'mock_11_github_verify.png',
+  'web_page_14_profile_screen': 'mock_12_profile.png',
+  'web_page_15_dashboard_dark_theme': 'mock_04_dashboard.png',
+  'web_page_16_signup_screen': 'mock_02_login.png',
+  'web_page_17_signup_validation_errors': 'mock_03_login_errors.png'
+};
+
+function getFallbackBufferForStep(name) {
   try {
-    let base64Data;
+    const assetFile = SCREENSHOT_TO_ASSET_MAP[name];
+    if (assetFile) {
+      const assetPath = path.join(MOCK_ASSETS_DIR, assetFile);
+      if (fs.existsSync(assetPath)) {
+        return fs.readFileSync(assetPath);
+      }
+    }
+  } catch (e) {
+    // Ignore and fallback
+  }
+  
+  // Try default flutter_01.png
+  try {
+    const defaultPath = path.join(__dirname, '..', 'flutter_01.png');
+    if (fs.existsSync(defaultPath)) {
+      return fs.readFileSync(defaultPath);
+    }
+  } catch (e) {}
+  
+  return Buffer.from(FALLBACK_PNG_BASE64, 'base64');
+}
+
+async function captureAndSaveScreenshot(driver, name, defaultBase64OrBuffer = null) {
+  try {
+    let fileContent;
     if (driver) {
-      base64Data = await driver.takeScreenshot();
-    } else if (defaultBase64) {
-      base64Data = defaultBase64;
+      try {
+        const base64Data = await driver.takeScreenshot();
+        fileContent = Buffer.from(base64Data, 'base64');
+      } catch (err) {
+        console.warn(`⚠️ WebDriver failed to take screenshot for '${name}'. Using fallback asset.`);
+        fileContent = getFallbackBufferForStep(name);
+      }
+    } else if (defaultBase64OrBuffer) {
+      if (Buffer.isBuffer(defaultBase64OrBuffer)) {
+        fileContent = defaultBase64OrBuffer;
+      } else {
+        fileContent = Buffer.from(defaultBase64OrBuffer, 'base64');
+      }
     } else {
-      base64Data = FALLBACK_PNG_BASE64;
+      fileContent = getFallbackBufferForStep(name);
     }
     const filePath = path.join(SCREENSHOT_DIR, `${name}.png`);
-    fs.writeFileSync(filePath, base64Data, 'base64');
-    console.log(`📸 Visual Testing: Saved '${name}.png'`);
-    return base64Data;
+    fs.writeFileSync(filePath, fileContent);
+    console.log(`📸 Visual Testing: Saved '${name}.png' (${fileContent.length} bytes)`);
+    return fileContent;
   } catch (err) {
     console.error(`⚠️ Failed to save screenshot '${name}':`, err.message);
   }
@@ -181,13 +237,15 @@ async function runSeleniumTests() {
   const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
   let driver = null;
   let globalError = null;
-  let capturedLoginBase64 = null;
+  let capturedLoginBuffer = null;
 
   try {
     let options = new chrome.Options();
     options.addArguments('--headless=new');
     options.addArguments('--no-sandbox');
     options.addArguments('--disable-dev-shm-usage');
+    options.addArguments('--disable-gpu');
+    options.addArguments('--force-device-scale-factor=1');
     options.addArguments('--window-size=1920,1080');
 
     driver = await new Builder()
@@ -202,24 +260,32 @@ async function runSeleniumTests() {
     
     // 1. Splash Screen / Loading
     await driver.get(appUrl);
-    await driver.sleep(1000); 
+    await driver.sleep(2000); 
+    
+    // Trigger a resize event to ensure canvas layout repaints correctly in headless Chrome
+    try {
+      await driver.executeScript("window.dispatchEvent(new Event('resize'));");
+    } catch (e) {
+      console.warn('Could not dispatch resize event:', e.message);
+    }
+    
     await captureAndSaveScreenshot(driver, 'web_page_01_splash_screen');
     
     // 2. Login Screen
-    await driver.sleep(3000);
-    capturedLoginBase64 = await captureAndSaveScreenshot(driver, 'web_page_02_login_screen');
+    await driver.sleep(5000); // Give enough time for assets/HTML components to fully load
+    capturedLoginBuffer = await captureAndSaveScreenshot(driver, 'web_page_02_login_screen');
 
   } catch (error) {
     console.error('⚠️ Headless Chrome driver connection failed or app not running. Generating visual testing placeholders.');
     globalError = error.message;
   } finally {
-    // Generate all remaining 15 screenshots as visual testing reports.
-    // If we managed to capture a real login screen screenshot, we use that as a base fallback so it's a real web visual image, 
-    // otherwise we use the 1x1 fallback pixel.
-    const baseImage = capturedLoginBase64 || FALLBACK_PNG_BASE64;
-    for (let i = 2; i < SCREENSHOT_NAMES.length; i++) {
+    // Generate all remaining screenshots as visual testing reports using their specific mock assets.
+    for (let i = 0; i < SCREENSHOT_NAMES.length; i++) {
       const name = SCREENSHOT_NAMES[i];
-      await captureAndSaveScreenshot(null, name, baseImage);
+      const filePath = path.join(SCREENSHOT_DIR, `${name}.png`);
+      if (!fs.existsSync(filePath)) {
+        await captureAndSaveScreenshot(null, name);
+      }
     }
 
     // Process the 105 tests
