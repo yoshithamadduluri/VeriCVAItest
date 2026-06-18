@@ -53,7 +53,7 @@ jobs:
       - name: Build Flutter Web
         run: |
           flutter pub get
-          flutter build web --release --base-href "/VeriCVAItest/" --web-renderer html
+          flutter build web --release --base-href "/VeriCVAItest/"
 
       - name: Serve and Run Selenium Tests
         run: |
