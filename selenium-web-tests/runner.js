@@ -275,6 +275,130 @@ async function runSeleniumTests() {
     await driver.sleep(5000); // Give enough time for assets/HTML components to fully load
     capturedLoginBuffer = await captureAndSaveScreenshot(driver, 'web_page_02_login_screen');
 
+    // 3. Test empty submission to check Validation Errors
+    console.log('Testing Login Validation Errors...');
+    try {
+      const loginButton = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Login') or @role='button']")), 5000);
+      await loginButton.click();
+      await driver.sleep(2000);
+      await captureAndSaveScreenshot(driver, 'web_page_03_login_validation_errors');
+    } catch (e) {
+      console.warn('Could not complete login validation test:', e.message);
+    }
+
+    // 4. Fill credentials and perform login
+    console.log('Entering valid credentials and logging in...');
+    try {
+      const emailInput = await driver.findElement(By.xpath("//input[@type='email'] | //input[1]"));
+      const passwordInput = await driver.findElement(By.xpath("//input[@type='password'] | //input[2]"));
+      
+      await emailInput.clear();
+      await emailInput.sendKeys('hello@vericv.com');
+      
+      await passwordInput.clear();
+      await passwordInput.sendKeys('password123');
+      
+      const loginButton = await driver.findElement(By.xpath("//*[contains(text(), 'Login') or @role='button']"));
+      await loginButton.click();
+      await driver.sleep(4000);
+      
+      // 5. Navigate to Dashboard
+      await captureAndSaveScreenshot(driver, 'web_page_04_dashboard');
+    } catch (e) {
+      console.warn('Could not perform credentials login:', e.message);
+    }
+
+    // 6. Resume Analyzer upload screen
+    console.log('Navigating to Resume Upload...');
+    try {
+      const uploadNav = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Upload Resume') or contains(text(), 'Analyze Resume')]")), 5000);
+      await uploadNav.click();
+      await driver.sleep(2000);
+      await captureAndSaveScreenshot(driver, 'web_page_05_resume_analyzer_initial');
+
+      // Attempt uploading a file
+      const fileInput = await driver.findElement(By.css("input[type='file']"));
+      const dummyPath = path.join(__dirname, 'dummy_resume.pdf');
+      fs.writeFileSync(dummyPath, 'Dummy Resume Content for ATS Parsing');
+      await fileInput.sendKeys(dummyPath);
+      await driver.sleep(2000);
+      await captureAndSaveScreenshot(driver, 'web_page_06_resume_upload_success');
+
+      // Wait for analysis results
+      await driver.sleep(5000);
+      await captureAndSaveScreenshot(driver, 'web_page_07_resume_analysis_results');
+      
+      if (fs.existsSync(dummyPath)) {
+        fs.unlinkSync(dummyPath);
+      }
+    } catch (e) {
+      console.warn('Could not complete resume upload test:', e.message);
+    }
+
+    // 7. Mock Interview Module
+    console.log('Navigating to AI Mock Interview...');
+    try {
+      const interviewNav = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Mock Interview') or contains(text(), 'AI Interview')]")), 5000);
+      await interviewNav.click();
+      await driver.sleep(2000);
+      await captureAndSaveScreenshot(driver, 'web_page_09_mock_interview_initial');
+
+      const startButton = await driver.findElement(By.xpath("//*[contains(text(), 'Start') or contains(text(), 'Interview')]"));
+      await startButton.click();
+      await driver.sleep(3000);
+      await captureAndSaveScreenshot(driver, 'web_page_10_mock_interview_active');
+
+      const answerInput = await driver.findElement(By.xpath("//textarea | //input[@type='text']"));
+      await answerInput.sendKeys('Flutter uses Dart and compiles to native machine code.');
+      const submitAnswer = await driver.findElement(By.xpath("//*[contains(text(), 'Submit') or contains(text(), 'Feedback')]"));
+      await submitAnswer.click();
+      await driver.sleep(4000);
+      await captureAndSaveScreenshot(driver, 'web_page_11_mock_interview_results');
+    } catch (e) {
+      console.warn('Could not complete active mock interview test:', e.message);
+    }
+
+    // 8. GitHub Verification Modal & Profile
+    console.log('Navigating to User Profile...');
+    try {
+      const profileNav = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Profile') or contains(text(), 'Account')]")), 5000);
+      await profileNav.click();
+      await driver.sleep(2000);
+      await captureAndSaveScreenshot(driver, 'web_page_14_profile_screen');
+
+      const githubInput = await driver.findElement(By.xpath("//input[contains(@placeholder, 'GitHub')]"));
+      await githubInput.clear();
+      await githubInput.sendKeys('yoshithamadduluri');
+      const verifyButton = await driver.findElement(By.xpath("//*[contains(text(), 'Verify')]"));
+      await verifyButton.click();
+      await driver.sleep(5000);
+      await captureAndSaveScreenshot(driver, 'web_page_13_github_verification_modal');
+
+      const trustScoreBtn = await driver.findElement(By.xpath("//*[contains(text(), 'Score') or contains(text(), 'Trust')]"));
+      await trustScoreBtn.click();
+      await driver.sleep(2000);
+      await captureAndSaveScreenshot(driver, 'web_page_12_trust_score_breakdown');
+    } catch (e) {
+      console.warn('Could not complete profile/GitHub verification test:', e.message);
+    }
+
+    // 9. Logout
+    console.log('Logging out...');
+    try {
+      const logoutBtn = await driver.findElement(By.xpath("//*[contains(text(), 'Logout') or contains(@class, 'logout')]"));
+      await logoutBtn.click();
+      await driver.sleep(2000);
+      try {
+        await driver.switchTo().alert().accept();
+      } catch (alertError) {
+        const confirmBtn = await driver.findElement(By.xpath("//button[contains(text(), 'Logout')]"));
+        await confirmBtn.click();
+      }
+      await driver.sleep(2000);
+    } catch (e) {
+      console.warn('Could not complete logout test:', e.message);
+    }
+
   } catch (error) {
     console.error('⚠️ Headless Chrome driver connection failed or app not running. Generating visual testing placeholders.');
     globalError = error.message;

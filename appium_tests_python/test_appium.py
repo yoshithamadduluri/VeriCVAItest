@@ -19,6 +19,9 @@ if hasattr(sys.stderr, 'buffer') and sys.stderr.encoding != 'utf-8':
 try:
     from appium import webdriver
     from appium.options.android import UiAutomator2Options
+    from appium.webdriver.common.appiumby import AppiumBy
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
     APPIUM_AVAILABLE = True
 except ImportError:
     APPIUM_AVAILABLE = False
@@ -308,16 +311,128 @@ def run_tests():
             driver = webdriver.Remote('http://127.0.0.1:4723', options=options)
             print("✅ Connected to Appium and launched VeriCV AI Android app")
             
-            # Take visual testing screenshot for launch
-            time.sleep(5) # Wait for app to render
+            # Wait for app rendering
+            time.sleep(5)
             driver.save_screenshot(f"{SCREENSHOT_DIR}/1_App_Launch.png")
             print("📸 Visual Testing: Saved '1_App_Launch.png'")
             
-            # Try interacting with a known widget if available or just sleep and capture
+            # Go to login screen
             time.sleep(2)
             driver.save_screenshot(f"{SCREENSHOT_DIR}/2_Login_Screen.png")
             print("📸 Visual Testing: Saved '2_Login_Screen.png'")
-            
+
+            # 3. Test empty submission to check Validation Errors
+            print("Appium Testing: Empty Form Login Validation Errors...")
+            try:
+                login_btn = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((AppiumBy.XPATH, "//*[contains(@text, 'Login') or contains(@content-desc, 'Login')]"))
+                )
+                login_btn.click()
+                time.sleep(2)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/3_Login_Validation_Errors.png")
+            except Exception as e:
+                print(f"Appium: Could not execute login validation test: {e}")
+
+            # 4. Fill credentials and perform login
+            print("Appium Testing: Entering credentials...")
+            try:
+                email_field = driver.find_element(by=AppiumBy.CLASS_NAME, value="android.widget.EditText")
+                email_field.clear()
+                email_field.send_keys("hello@vericv.com")
+                
+                fields = driver.find_elements(by=AppiumBy.CLASS_NAME, value="android.widget.EditText")
+                if len(fields) > 1:
+                    password_field = fields[1]
+                    password_field.clear()
+                    password_field.send_keys("password123")
+                
+                login_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Login') or contains(@content-desc, 'Login')]")
+                login_btn.click()
+                time.sleep(5)
+                
+                # 5. Dashboard Screen
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/4_User_Dashboard.png")
+            except Exception as e:
+                print(f"Appium: Could not complete credential login: {e}")
+
+            # 6. Resume upload flow
+            print("Appium Testing: Navigating to Resume Upload...")
+            try:
+                upload_menu = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((AppiumBy.XPATH, "//*[contains(@text, 'Upload Resume') or contains(@content-desc, 'Upload Resume')]"))
+                )
+                upload_menu.click()
+                time.sleep(2)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/5_Resume_Upload.png")
+
+                select_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Select File') or contains(@content-desc, 'Select File')]")
+                select_btn.click()
+                time.sleep(4)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/6_Resume_Results.png")
+            except Exception as e:
+                print(f"Appium: Could not complete resume upload test: {e}")
+
+            # 7. AI Mock Interview flow
+            print("Appium Testing: Navigating to AI Mock Interview...")
+            try:
+                interview_menu = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((AppiumBy.XPATH, "//*[contains(@text, 'Interview') or contains(@content-desc, 'Interview')]"))
+                )
+                interview_menu.click()
+                time.sleep(2)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/7_Interview_Prep.png")
+
+                start_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Start') or contains(@content-desc, 'Start')]")
+                start_btn.click()
+                time.sleep(3)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/8_Interview_Active.png")
+
+                answer_box = driver.find_element(by=AppiumBy.CLASS_NAME, value="android.widget.EditText")
+                answer_box.send_keys("Flutter utilizes a single codebase to build high-performance mobile, web, and desktop apps.")
+                
+                submit_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Submit') or contains(@content-desc, 'Submit')]")
+                submit_btn.click()
+                time.sleep(4)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/9_Interview_Results.png")
+            except Exception as e:
+                print(f"Appium: Could not complete mock interview test: {e}")
+
+            # 8. Trust Score & GitHub Verification
+            print("Appium Testing: Navigating to Trust Score...")
+            try:
+                score_menu = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((AppiumBy.XPATH, "//*[contains(@text, 'Trust Score') or contains(@content-desc, 'Trust Score')]"))
+                )
+                score_menu.click()
+                time.sleep(2)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/10_Trust_Score.png")
+
+                verify_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Verify GitHub') or contains(@content-desc, 'Verify GitHub')]")
+                verify_btn.click()
+                time.sleep(2)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/11_GitHub_Verify.png")
+            except Exception as e:
+                print(f"Appium: Could not complete trust score verification test: {e}")
+
+            # 9. Profile Screen & Logout
+            print("Appium Testing: Navigating to Profile...")
+            try:
+                profile_menu = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((AppiumBy.XPATH, "//*[contains(@text, 'Profile') or contains(@content-desc, 'Profile')]"))
+                )
+                profile_menu.click()
+                time.sleep(2)
+                driver.save_screenshot(f"{SCREENSHOT_DIR}/12_Profile.png")
+
+                logout_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Logout') or contains(@content-desc, 'Logout')]")
+                logout_btn.click()
+                time.sleep(2)
+                confirm_btn = driver.find_element(by=AppiumBy.XPATH, value="//*[contains(@text, 'Confirm') or contains(@text, 'Logout')]")
+                confirm_btn.click()
+                time.sleep(2)
+            except Exception as e:
+                print(f"Appium: Could not complete profile and logout test: {e}")
+
             global_error = None
             
         except Exception as e:
