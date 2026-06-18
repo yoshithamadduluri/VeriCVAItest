@@ -40,8 +40,8 @@ class AuthService {
       await _createUserInFirestore(updatedUser, 'email');
       
       return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw e; // Rethrow to let the UI parse specific Firebase errors
+    } on FirebaseAuthException {
+      rethrow; // Rethrow to let the UI parse specific Firebase errors
     } catch (e) {
       throw Exception('Failed to register: $e');
     }

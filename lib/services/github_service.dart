@@ -10,7 +10,7 @@ class GitHubService {
 
   Map<String, String> get _headers {
     final headers = {'Accept': 'application/vnd.github.v3+json'};
-    if (_accessToken != null && _accessToken!.isNotEmpty) {
+    if (_accessToken != null && _accessToken.isNotEmpty) {
       headers['Authorization'] = 'token $_accessToken';
     }
     return headers;

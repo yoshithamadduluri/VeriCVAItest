@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -17,7 +18,7 @@ class UserService {
       }
     } catch (e) {
       // In production, consider logging to a service
-      print('Error fetching user profile: $e');
+      debugPrint('Error fetching user profile: $e');
     }
     return null;
   }

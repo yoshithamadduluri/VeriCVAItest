@@ -62,16 +62,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _verifiedSkills = languageCounts;
       });
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('GitHub skills verified successfully!')),
       );
     } catch (e) {
-      setState(() {
-        _isVerifying = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Verification failed: $e')),
-      );
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verification failed: $e')),
+        );
+      }
     }
   }
 

@@ -81,6 +81,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  void _loginWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final authService = ref.read(authServiceProvider);
+      final cred = await authService.signInWithGoogle();
+      if (cred != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      }
+    } catch (e) {
+      _showErrorSnackBar(_parseErrorMessage(e.toString()));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -155,25 +179,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
-                  onPressed: _isLoading ? null : () async {
-                    setState(() { _isLoading = true; });
-                    try {
-                      final authService = ref.read(authServiceProvider);
-                      final cred = await authService.signInWithGoogle();
-                      if (cred != null && mounted) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                        );
-                      }
-                    } catch (e) {
-                      _showErrorSnackBar(_parseErrorMessage(e.toString()));
-                    } finally {
-                      if (mounted) {
-                        setState(() { _isLoading = false; });
-                      }
-                    }
-                  },
+                  onPressed: _isLoading ? null : _loginWithGoogle,
                   icon: const Icon(Icons.g_mobiledata, size: 28),
                   label: const Text('Sign in with Google'),
                   style: OutlinedButton.styleFrom(

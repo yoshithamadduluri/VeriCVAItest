@@ -190,12 +190,12 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
               children: [
                 Chip(
                   label: Text(currentQuestion.category),
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   side: BorderSide.none,
                 ),
                 Chip(
                   label: Text(currentQuestion.difficulty),
-                  backgroundColor: Colors.orange.withOpacity(0.1),
+                  backgroundColor: Colors.orange.withValues(alpha: 0.1),
                   side: BorderSide.none,
                 ),
               ],
@@ -248,7 +248,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
                   const Text('AI Feedback', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Card(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(

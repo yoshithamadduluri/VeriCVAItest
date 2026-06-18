@@ -66,7 +66,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
               child: Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   border: Border.all(
                     color: Theme.of(context).colorScheme.primary,
                     width: 2,

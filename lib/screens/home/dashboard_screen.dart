@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../resume/resume_upload_screen.dart';
-import '../resume/job_match_screen.dart';
 import '../interview/mock_interview_screen.dart';
 import '../profile/profile_screen.dart';
 

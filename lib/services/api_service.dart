@@ -20,7 +20,7 @@ class ApiService {
   /// Sends a prompt to the Gemini API and returns the generated text.
   Future<String> generateContent(String prompt) async {
     final apiKey = _apiKey;
-    final url = Uri.parse('\$_baseUrl/\$_modelName:generateContent?key=\$apiKey');
+    final url = Uri.parse('$_baseUrl/$_modelName:generateContent?key=$apiKey');
 
     final headers = {
       'Content-Type': 'application/json',
