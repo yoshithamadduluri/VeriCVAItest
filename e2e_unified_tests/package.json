@@ -1,0 +1,14 @@
+{
+  "name": "vericvai-unified-e2e-tests",
+  "version": "1.0.0",
+  "description": "Unified Appium and Selenium E2E tests for VeriCV AI web app and Android app",
+  "main": "unified_test_runner.js",
+  "scripts": {
+    "test": "node unified_test_runner.js"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.19.0",
+    "webdriverio": "^8.36.1",
+    "exceljs": "^4.4.0"
+  }
+}

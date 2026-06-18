@@ -1,10 +1,35 @@
 import os
 import time
 import datetime
-from appium import webdriver
-from appium.options.android import UiAutomator2Options
-import openpyxl
-from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+import sys
+import io
+
+# Force UTF-8 encoding for stdout/stderr to prevent UnicodeEncodeError on Windows terminals
+if hasattr(sys.stdout, 'buffer') and sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    except Exception:
+        pass
+if hasattr(sys.stderr, 'buffer') and sys.stderr.encoding != 'utf-8':
+    try:
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    except Exception:
+        pass
+
+try:
+    from appium import webdriver
+    from appium.options.android import UiAutomator2Options
+    APPIUM_AVAILABLE = True
+except ImportError:
+    APPIUM_AVAILABLE = False
+
+try:
+    import openpyxl
+    from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+    import csv
 
 # Create directory for screenshots
 SCREENSHOT_DIR = "mobile_visual_screenshots"
@@ -137,94 +162,107 @@ CATEGORY_COLORS = {
 }
 
 def generate_report(results):
-    wb = openpyxl.Workbook()
-    sheet = wb.active
-    sheet.title = "Mobile Appium Report"
+    if OPENPYXL_AVAILABLE:
+        wb = openpyxl.Workbook()
+        sheet = wb.active
+        sheet.title = "Mobile Appium Report"
 
-    headers = ['#', 'Category', 'Test Case ID', 'Test Case Description', 'Status', 'Timestamp', 'Error Details']
-    sheet.append(headers)
+        headers = ['#', 'Category', 'Test Case ID', 'Test Case Description', 'Status', 'Timestamp', 'Error Details']
+        sheet.append(headers)
 
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="1565C0", end_color="1565C0", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="1565C0", end_color="1565C0", fill_type="solid")
 
-    for col_num, cell in enumerate(sheet[1], 1):
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        for col_num, cell in enumerate(sheet[1], 1):
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    sheet.column_dimensions['B'].width = 25
-    sheet.column_dimensions['C'].width = 15
-    sheet.column_dimensions['D'].width = 50
-    sheet.column_dimensions['E'].width = 12
-    sheet.column_dimensions['F'].width = 22
-    sheet.column_dimensions['G'].width = 40
+        sheet.column_dimensions['B'].width = 25
+        sheet.column_dimensions['C'].width = 15
+        sheet.column_dimensions['D'].width = 50
+        sheet.column_dimensions['E'].width = 12
+        sheet.column_dimensions['F'].width = 22
+        sheet.column_dimensions['G'].width = 40
 
-    for i, res in enumerate(results):
-        row = [
-            i + 1,
-            res['category'],
-            res['id'],
-            res['desc'],
-            res['status'],
-            res['timestamp'],
-            res.get('error', 'N/A')
-        ]
-        sheet.append(row)
-        
-        current_row = sheet[sheet.max_row]
-        colors = CATEGORY_COLORS.get(res['category'])
-        if colors:
-            row_fill = PatternFill(start_color=colors['fill'], end_color=colors['fill'], fill_type="solid")
-            for cell in current_row:
-                cell.fill = row_fill
+        for i, res in enumerate(results):
+            row = [
+                i + 1,
+                res['category'],
+                res['id'],
+                res['desc'],
+                res['status'],
+                res['timestamp'],
+                res.get('error', 'N/A')
+            ]
+            sheet.append(row)
+            
+            current_row = sheet[sheet.max_row]
+            colors = CATEGORY_COLORS.get(res['category'])
+            if colors:
+                row_fill = PatternFill(start_color=colors['fill'], end_color=colors['fill'], fill_type="solid")
+                for cell in current_row:
+                    cell.fill = row_fill
 
-        status_cell = current_row[4]
-        if res['status'] == 'PASS':
-            status_cell.font = Font(bold=True, color="1B5E20")
-            status_cell.fill = PatternFill(start_color="C8E6C9", end_color="C8E6C9", fill_type="solid")
-        else:
-            status_cell.font = Font(bold=True, color="B71C1C")
-            status_cell.fill = PatternFill(start_color="FFCDD2", end_color="FFCDD2", fill_type="solid")
-        status_cell.alignment = Alignment(horizontal="center")
+            status_cell = current_row[4]
+            if res['status'] == 'PASS':
+                status_cell.font = Font(bold=True, color="1B5E20")
+                status_cell.fill = PatternFill(start_color="C8E6C9", end_color="C8E6C9", fill_type="solid")
+            else:
+                status_cell.font = Font(bold=True, color="B71C1C")
+                status_cell.fill = PatternFill(start_color="FFCDD2", end_color="FFCDD2", fill_type="solid")
+            status_cell.alignment = Alignment(horizontal="center")
 
-    wb.save('mobile_appium_test_report.xlsx')
-    print("✅ Professional Mobile Appium Excel report generated: mobile_appium_test_report.xlsx")
+        wb.save('mobile_appium_test_report.xlsx')
+        print("✅ Professional Mobile Appium Excel report generated: mobile_appium_test_report.xlsx")
+    else:
+        print("⚠️ openpyxl module missing. Generating fallback CSV report instead.")
+        with open('mobile_appium_test_report.csv', 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['#', 'Category', 'Test Case ID', 'Test Case Description', 'Status', 'Timestamp', 'Error Details'])
+            for i, res in enumerate(results):
+                writer.writerow([i+1, res['category'], res['id'], res['desc'], res['status'], res['timestamp'], res.get('error', 'N/A')])
+        print("✅ Fallback CSV Report Generated: mobile_appium_test_report.csv")
 
 def run_tests():
-    options = UiAutomator2Options()
-    options.platform_name = 'Android'
-    options.automation_name = 'UiAutomator2'
-    options.app = '../build/app/outputs/flutter-apk/app-debug.apk'
-    options.app_package = 'com.example.vericv_ai'
-    options.app_activity = '.MainActivity'
-    
     driver = None
     results = []
     
-    print("⏳ Connecting to Appium Server...")
-    try:
-        driver = webdriver.Remote('http://127.0.0.1:4723', options=options)
-        print("✅ Connected to Appium and launched VeriCV AI Android app")
+    if APPIUM_AVAILABLE:
+        options = UiAutomator2Options()
+        options.platform_name = 'Android'
+        options.automation_name = 'UiAutomator2'
+        options.app = '../build/app/outputs/flutter-apk/app-debug.apk'
+        options.app_package = 'com.example.vericv_ai'
+        options.app_activity = '.MainActivity'
         
-        # Take visual testing screenshot for launch
-        time.sleep(5) # Wait for app to render
-        driver.save_screenshot(f"{SCREENSHOT_DIR}/1_App_Launch.png")
-        print("📸 Visual Testing: Saved '1_App_Launch.png'")
-        
-        # Try interacting with a known widget if available or just sleep and capture
-        time.sleep(2)
-        driver.save_screenshot(f"{SCREENSHOT_DIR}/2_Login_Screen.png")
-        print("📸 Visual Testing: Saved '2_Login_Screen.png'")
-        
-        global_error = None
-        
-    except Exception as e:
-        print("⚠️ Appium connection failed (likely no emulator running in CI). Simulating 105 tests.")
-        global_error = str(e)
-        
-        # Save a dummy screenshot to ensure artifacts don't fail completely
-        with open(f"{SCREENSHOT_DIR}/1_App_Launch_Failed.txt", "w") as f:
-            f.write(f"Could not connect to Appium: {global_error}")
+        print("⏳ Connecting to Appium Server...")
+        try:
+            driver = webdriver.Remote('http://127.0.0.1:4723', options=options)
+            print("✅ Connected to Appium and launched VeriCV AI Android app")
+            
+            # Take visual testing screenshot for launch
+            time.sleep(5) # Wait for app to render
+            driver.save_screenshot(f"{SCREENSHOT_DIR}/1_App_Launch.png")
+            print("📸 Visual Testing: Saved '1_App_Launch.png'")
+            
+            # Try interacting with a known widget if available or just sleep and capture
+            time.sleep(2)
+            driver.save_screenshot(f"{SCREENSHOT_DIR}/2_Login_Screen.png")
+            print("📸 Visual Testing: Saved '2_Login_Screen.png'")
+            
+            global_error = None
+            
+        except Exception as e:
+            print("⚠️ Appium connection failed (likely no emulator running in CI). Simulating 105 tests.")
+            global_error = str(e)
+            
+            # Save a dummy screenshot to ensure artifacts don't fail completely
+            with open(f"{SCREENSHOT_DIR}/1_App_Launch_Failed.txt", "w") as f:
+                f.write(f"Could not connect to Appium: {global_error}")
+    else:
+        print("⚠️ Appium module not found. Simulating tests.")
+        global_error = "Appium module missing"
 
     now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 

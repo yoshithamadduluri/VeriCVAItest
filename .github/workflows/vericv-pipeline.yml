@@ -34,7 +34,7 @@ jobs:
         uses: browser-actions/setup-chrome@latest
 
       - name: Install Node Dependencies
-        working-directory: ./selenium_tests
+        working-directory: ./selenium-web-tests
         run: npm install
 
       - name: Restore Firebase Config Files
@@ -59,7 +59,7 @@ jobs:
         run: |
           python3 -m http.server 8080 --directory build/web &
           sleep 3
-          cd selenium_tests && npm run test
+          cd selenium-web-tests && npm run test
 
       - name: Upload Web Build Artifact
         uses: actions/upload-artifact@v4
@@ -72,14 +72,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: selenium-report
-          path: selenium_tests/web_test_report.xlsx
+          path: selenium-web-tests/selenium_report.xlsx
           
       - name: Upload Selenium Visual Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: web-visual-screenshots
-          path: selenium_tests/web_visual_screenshots/
+          path: selenium-web-tests/reports/screenshots/
 
   appium-python-tests:
     name: Appium Mobile Tests (Python)

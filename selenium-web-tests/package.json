@@ -1,0 +1,13 @@
+{
+  "name": "vericvai-selenium-web-tests",
+  "version": "1.0.0",
+  "description": "Selenium E2E tests for VeriCV AI web app with Excel reporting and screenshots",
+  "main": "runner.js",
+  "scripts": {
+    "test": "node runner.js"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.19.0",
+    "exceljs": "^4.4.0"
+  }
+}
