@@ -1,0 +1,14 @@
+{
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/.dart_tool": true,
+    "**/.pub-cache": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/build/**": true,
+    "**/.dart_tool/**": true,
+    "**/.pub-cache/**": true
+  }
+}
