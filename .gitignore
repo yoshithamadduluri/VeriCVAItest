@@ -51,4 +51,22 @@ lib/firebase_options.dart
 
 
 # Node.js Testing
+node_modules/
+npm-debug.log*
+selenium-web-tests/reports/screenshots/
+
+# Python / Appium
+appium_tests_python/.venv/
+appium_tests_python/__pycache__/
+appium_tests_python/*.pyc
+appium_tests_python/VeriCV_*.csv
+appium_tests_python/VeriCV_Unified_Test_Report.xlsx
+appium_tests_python/VeriCV_Web_Tests.csv
+appium_tests_python/VeriCV_Mobile_Tests.csv
+
+# E2E unified (legacy)
+e2e_unified_tests/node_modules/
+
+# Build output
+/build/
 
